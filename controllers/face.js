@@ -130,7 +130,7 @@ exports.DeleteFace = async (req, res) => {
 						.status(404)
 						.send({message: "La cara de la persona no ha sido eliminada"});
 				} else {
-					res.status(404).send({faceRemoved});
+					res.status(200).send({faceRemoved});
 				}
 			}
 		});
