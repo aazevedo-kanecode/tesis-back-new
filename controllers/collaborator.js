@@ -12,7 +12,6 @@ exports.createUser = async (req, res) => {
 			user.name = params.name;
 			user.surname = params.surname;
 			user.email = params.email;
-			user.image = null;
 			user.password = params.password;
 
 			const role = await Role.findOne({name: "collaborator"});
@@ -25,7 +24,7 @@ exports.createUser = async (req, res) => {
 					//Si no existe se crea el usuario y se asocia al admininistrador
 					if (!issetUser) {
 					} else {
-						//Si existe se debe asociar al administrador
+						//Actualizamos el usuario colaborador y lo asociamos al administrador
 					}
 				}
 			});
