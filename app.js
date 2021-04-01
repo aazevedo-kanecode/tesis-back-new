@@ -3,12 +3,26 @@ var createRoles = require("./libs/initialSetup");
 
 var express = require("express");
 var bodyParser = require("body-parser");
+var webpush = require("web-push");
 
 var app = express();
 createRoles.createRoles();
 
 const http = require("http").Server(app); //creamos un servidor http a partir de la libreria express
 const io = require("socket.io")(http); //para poder llamarlo desde nuestros html que vamos a crear luego
+
+//Push notifications
+const vapidKeys = {
+	publicKey:
+		"BPWkPcyZruyIUOSj6XWbltqNRDP5sfC2hO31tRQPGs9AgAkxPcxRqbMnAQiuPbdSZDqcgWggIBJ0IOWzvf0i4hw",
+	privateKey: "GsOBamO1cRqmSyAofauqRqgi9EB1wZeLHaQeHM4zCrc",
+};
+
+webpush.setVapidDetails(
+	"mailto:example@yourdomain.org",
+	vapidKeys.publicKey,
+	vapidKeys.privateKey
+);
 
 // Cargar rutas
 var user_routes = require("./routes/user");
@@ -22,8 +36,9 @@ var confidenceLevels_routes = require("./routes/confidenceLevels");
 var face_routes = require("./routes/face");
 
 // middlewares de body-parser
-app.use(bodyParser.urlencoded({extended: false}));
-app.use(bodyParser.json());
+
+app.use(express.urlencoded({extended: false}));
+app.use(express.json());
 
 // Configurar cabeceras y cors
 

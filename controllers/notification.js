@@ -111,3 +111,17 @@ exports.DeleteNotification = async (req, res) => {
 		console.error(error);
 	}
 };
+
+exports.enviarNotificacion = async (req, res) => {
+	const pushSubscription = {
+		endpoint:
+			"https://updates.push.services.mozilla.com/wpush/v2/gAAAAABgZQ6sUOj4xCTyLX9EXMZD1McmKPgq5HPISzzyapF4Up_0-sEjsH2nf4ipfq_6h5Nxcxj_sa3JdRZpGzk-eQ996WxH8o-Yuds8U4uYK3qFGvcv6alRLUB1PsUH9F0d8Vgtj49BcpbBGAjFfuAbegj6IuSCcfMF6XJPBe8s2yk9VQC3Fmg",
+		keys: {
+			auth: "Hm5oU-Fr7es5HwANyAnTYg",
+			p256dh:
+				"BJnAWgyEMrjeRhtojGeEbUpDs166HfikgxfQaHTBvu61qbZXnuWtG7L4qi5XokWucFnTzocJvPvC6tjAZZqlQcI",
+		},
+	};
+
+	webpush.sendNotification(pushSubscription, "Your Push Payload Text");
+};

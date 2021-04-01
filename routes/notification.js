@@ -40,4 +40,6 @@ api.delete(
 	NotificationController.DeleteNotification
 );
 
+api.post("/send-notification", NotificationController.enviarNotificacion);
+
 module.exports = api;
