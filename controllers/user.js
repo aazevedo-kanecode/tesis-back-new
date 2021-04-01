@@ -12,6 +12,7 @@ let Role = require("../models/role");
 // Servicio JWT
 var jwt = require("../services/jwt");
 const user = require("../models/user");
+const speakeasy = require("speakeasy");
 
 const saveUser = async (req, res) => {
 	try {
@@ -28,6 +29,12 @@ const saveUser = async (req, res) => {
 
 			const role = await Role.findOne({name: "admin"});
 			user.roles = [role._id];
+
+			//Crear una  clave temporal
+			const temp_secret = speakeasy.generateSecret();
+
+			console.log(temp_secret);
+			user.temp_secreto = temp_secret;
 
 			User.findOne({email: user.email.toLowerCase()}, (err, issetUser) => {
 				if (err) {
@@ -50,6 +57,8 @@ const saveUser = async (req, res) => {
 									} else {
 										res.status(200).send({
 											token: jwt.createToken(userStored),
+											secret: temp_secret.base32,
+											id: userStored._id,
 										});
 									}
 								}
@@ -70,6 +79,57 @@ const saveUser = async (req, res) => {
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json(error);
+	}
+};
+
+const verificationCode = async (req, res) => {
+	var params = req.body;
+
+	try {
+		if (params._id && params.token_secret) {
+			User.findOne({_id: params._id.toLowerCase()}, (err, user) => {
+				if (err) {
+					res.status(500).send({
+						message: "error al comprobar el usuario",
+					});
+				} else {
+					const token = params.token_secret;
+					const {base32: secret} = user.temp_secreto;
+					const verified = speakeasy.totp.verify({
+						secret,
+						encoding: "base32",
+						token,
+					});
+					if (verified) {
+						User.findByIdAndUpdate(
+							params._id,
+							{_id: params._id, temp_secreto: params.token_secret},
+							{new: true},
+							(err, userUpdated) => {
+								if (err) {
+									res.status(500).send({
+										message: "Error al actualizar usuario",
+									});
+								} else {
+									res.status(200).send({
+										verified: true,
+										userUpdated,
+									});
+								}
+							}
+						);
+					} else {
+						res.status(500).send({
+							message: "Token no valido",
+							verified: false,
+						});
+					}
+				}
+			});
+		}
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({message: "Error retrieving user"});
 	}
 };
 
@@ -298,4 +358,5 @@ module.exports = {
 	getImageFile,
 	getUserToken,
 	forgotPassword,
+	verificationCode,
 };

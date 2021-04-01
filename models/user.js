@@ -22,6 +22,7 @@ var UserSchema = Schema({
 		required: true,
 		trim: true,
 	},
+	temp_secreto: Object,
 	birthday: String,
 	country: String,
 	image: String,

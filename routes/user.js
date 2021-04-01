@@ -17,6 +17,7 @@ var {check} = require("express-validator");
 // Protegemos la ruta con autenticación para ver si el usuario está logueado (md_auth.ensureAuth)
 api.post("/register", UserController.saveUser);
 api.post("/login", UserController.login);
+api.post("/verify", UserController.verificationCode);
 api.put(
 	"/update-user/:id",
 	[md_auth.ensureAuth, md_auth_admin.isAdmin],
