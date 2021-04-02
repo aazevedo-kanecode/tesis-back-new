@@ -13,6 +13,7 @@ let Role = require("../models/role");
 var jwt = require("../services/jwt");
 const user = require("../models/user");
 const speakeasy = require("speakeasy");
+const twofactor = require("node-2fa");
 
 const saveUser = async (req, res) => {
 	try {
@@ -31,9 +32,12 @@ const saveUser = async (req, res) => {
 			user.roles = [role._id];
 
 			//Crear una  clave temporal
-			const temp_secret = speakeasy.generateSecret();
+			//const temp_secret = speakeasy.generateSecret();
+			const temp_secret = twofactor.generateSecret({
+				name: "Sistema de videovigilancia",
+				account: "Tesis por Alexander y Vladimir",
+			});
 
-			console.log(temp_secret);
 			user.temp_secreto = temp_secret;
 
 			User.findOne({email: user.email.toLowerCase()}, (err, issetUser) => {
@@ -57,7 +61,7 @@ const saveUser = async (req, res) => {
 									} else {
 										res.status(200).send({
 											token: jwt.createToken(userStored),
-											secret: temp_secret.base32,
+											secret: userStored.temp_secreto,
 											id: userStored._id,
 										});
 									}
@@ -73,7 +77,7 @@ const saveUser = async (req, res) => {
 			});
 		} else {
 			res
-				.status(200)
+				.status(404)
 				.send({message: "Introduce los datos del usuario correctamente"});
 		}
 	} catch (error) {
@@ -86,46 +90,16 @@ const verificationCode = async (req, res) => {
 	var params = req.body;
 
 	try {
-		if (params._id && params.token_secret) {
-			User.findOne({_id: params._id.toLowerCase()}, (err, user) => {
-				if (err) {
-					res.status(500).send({
-						message: "error al comprobar el usuario",
-					});
-				} else {
-					const token = params.token_secret;
-					const {base32: secret} = user.temp_secreto;
-					const verified = speakeasy.totp.verify({
-						secret,
-						encoding: "base32",
-						token,
-					});
-					if (verified) {
-						User.findByIdAndUpdate(
-							params._id,
-							{_id: params._id, temp_secreto: params.token_secret},
-							{new: true},
-							(err, userUpdated) => {
-								if (err) {
-									res.status(500).send({
-										message: "Error al actualizar usuario",
-									});
-								} else {
-									res.status(200).send({
-										verified: true,
-										userUpdated,
-									});
-								}
-							}
-						);
-					} else {
-						res.status(500).send({
-							message: "Token no valido",
-							verified: false,
-						});
-					}
-				}
-			});
+		if (params.secret && params.token_secret) {
+			const verified = twofactor.verifyToken(
+				params.secret,
+				params.token_secret
+			);
+			if (verified != null) {
+				res.status(200).send({message: "Usuario verificado"});
+			} else {
+				res.status(404).send({message: "Usuario no verificado"});
+			}
 		}
 	} catch (error) {
 		console.error(error);
@@ -159,9 +133,11 @@ const login = async (req, res) => {
 									token: jwt.createToken(user),
 								});
 							} else {
-								res
-									.status(200)
-									.send({token: jwt.createToken(user), id: user.id});
+								res.status(200).send({
+									token: jwt.createToken(user),
+									id: user.id,
+									secret: user.temp_secreto.secret,
+								});
 							}
 						} else {
 							// contraseña incorrecta
