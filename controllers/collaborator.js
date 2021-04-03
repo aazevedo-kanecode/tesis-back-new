@@ -2,7 +2,7 @@
 let User = require("../models/user");
 let Role = require("../models/role");
 
-exports.createUser = async (req, res) => {
+exports.createCollaborator = async (req, res) => {
 	try {
 		var user = new User();
 		var params = req.body;

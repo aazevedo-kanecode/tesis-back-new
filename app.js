@@ -35,6 +35,7 @@ var image_routes = require("./routes/image");
 var notification_routes = require("./routes/notification");
 var confidenceLevels_routes = require("./routes/confidenceLevels");
 var face_routes = require("./routes/face");
+var google_drive = require("./routes/googleDrive");
 
 // middlewares de body-parser
 
@@ -73,6 +74,7 @@ app.use("/api", image_routes);
 app.use("/api", notification_routes);
 app.use("/api", confidenceLevels_routes);
 app.use("/api", face_routes);
+app.use("/api", google_drive);
 
 io.on("connection", (socket) => {
 	socket.on("stream", (image) => {

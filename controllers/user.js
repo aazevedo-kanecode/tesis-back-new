@@ -12,7 +12,6 @@ let Role = require("../models/role");
 // Servicio JWT
 var jwt = require("../services/jwt");
 const user = require("../models/user");
-const speakeasy = require("speakeasy");
 const twofactor = require("node-2fa");
 
 const saveUser = async (req, res) => {

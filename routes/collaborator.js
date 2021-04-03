@@ -12,7 +12,7 @@ var {check} = require("express-validator");
 api.post(
 	"/create-collaborator",
 	[md_auth.ensureAuth, md_auth_admin.isAdmin],
-	CollaboratorController.createUser
+	CollaboratorController.createCollaborator
 );
 
 module.exports = api;

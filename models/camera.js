@@ -19,11 +19,6 @@ var CameraSchema = Schema({
 		required: true,
 		trim: true,
 	},
-	resolution: {
-		type: String,
-		required: true,
-		trim: true,
-	},
 	turn_screen: {
 		type: Boolean,
 		required: true,
