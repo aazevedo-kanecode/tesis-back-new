@@ -15,4 +15,10 @@ api.post(
 	CollaboratorController.createCollaborator
 );
 
+api.get(
+	"/get-collaborator-administrator/:id",
+	[md_auth.ensureAuth, md_auth_admin.isAdmin],
+	CollaboratorController.getCollaboratorsByAdministrator
+);
+
 module.exports = api;

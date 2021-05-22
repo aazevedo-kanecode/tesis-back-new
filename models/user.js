@@ -27,6 +27,10 @@ var UserSchema = Schema({
 	country: String,
 	image: String,
 	roles: [{type: Schema.ObjectId, ref: "Role", required: true}],
+	user_camera: {
+		type: Schema.ObjectId,
+		ref: "UserCamera",
+	},
 });
 
 module.exports = mongoose.model("User", UserSchema);

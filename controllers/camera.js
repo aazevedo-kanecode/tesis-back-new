@@ -1,29 +1,12 @@
 // Modelos
 let Camera = require("../models/camera");
-
+let UserCamera = require("../models/user_camara");
+let User = require("../models/user");
+let collaboratorController = require("../controllers/collaborator");
 exports.getCameras = async (req, res) => {
 	try {
-		if (req.params.page) {
-			var page = req.params.page;
-		} else {
-			var page = 1;
-		}
-
-		var itemsPerPage = 3;
-
-		Camera.find()
-			.sort("name")
-			.paginate(page, itemsPerPage, function (err, cameras, total) {
-				if (err) {
-					res.status(500).send({message: "Error en la peticion"});
-				} else {
-					if (!cameras) {
-						res.status(404).send({message: "No hay camaras"});
-					} else {
-						return res.status(200).send({total_items: total, cameras: cameras});
-					}
-				}
-			});
+		const cameras = await Camera.find().sort("name");
+		return res.json(cameras);
 	} catch (error) {
 		console.error(error);
 	}
@@ -31,18 +14,19 @@ exports.getCameras = async (req, res) => {
 
 exports.getCamera = async (req, res) => {
 	try {
-		var cameraId = req.params.id;
-		Camera.findById(cameraId, (err, camera) => {
-			if (err) {
-				res.status(500).send({message: "Error en la peticion"});
-			} else {
-				if (!camera) {
-					res.status(404).send({message: "La camara no existe"});
-				} else {
-					res.status(200).send({camera});
+		//var cameraId = req.params.id;
+		var cameraId = req.params ? req.params.id : req.body.id;
+		Camera.findById(cameraId)
+			.then((camera) => {
+				if (req.params) {
+					res.json(camera);
+				} else if (req.body.id) {
+					return camera;
 				}
-			}
-		});
+			})
+			.catch((err) => {
+				console.log(err);
+			});
 	} catch (error) {
 		console.error(error);
 	}
@@ -53,31 +37,73 @@ exports.saveCamera = async (req, res) => {
 		let camera = new Camera();
 		let params = req.body;
 
-		if (
-			params.name &&
-			params.flash &&
-			params.power &&
-			params.resolution &&
-			params.turn_screen
-		) {
-			camera.name = params.name;
-			camera.flash = params.flash;
-			camera.power = params.power;
-			camera.resolution = params.resolution;
-			camera.turn_screen = params.turn_screen;
+		camera.name = params.name;
+		camera.flash = params.flash;
+		camera.power = params.power;
+		camera.turn_screen = params.turn_screen;
 
-			camera.save((err, cameraStored) => {
-				if (err) {
-					res.status(500).send({message: "Error al guardar la camara"});
-				} else {
-					if (!cameraStored) {
-						res.status(404).send({message: "La camara no ha sido guardada"});
+		camera.save((err, cameraStored) => {
+			if (!cameraStored) {
+				res.status(404).send({message: "La camara no ha sido guardada"});
+			} else {
+				User.findOne({_id: params.administratorId}, (err, userExists) => {
+					if (userExists) {
+						collaboratorController
+							.getCollaboratorsByAdministrator({
+								body: {UserAdmin: params.administratorId},
+							})
+							.then((collaborators) => {
+								//REVISAR ESTO filter es null buscar otro for para js
+								/* if (userExists) {
+    user_camera.UserAdmin = params.administratorId;
+    user_camera.UserCollaborator = null;
+    user_camera.save();
+    console.log(`Cámara creada con exito`);
+}
+
+collaboratorController
+.getCollaboratorsByAdministrator({
+    body: {UserAdmin: params.administratorId},
+})
+.then((collaborators) => {
+    if (collaborators.length > 0) {
+        collaborators.filter(function (collaborator) {
+            user_camera.UserAdmin = params.administratorId;
+            user_camera.UserCollaborator = collaborator._id;
+            user_camera.save();
+        });
+    } else {
+        user_camera.UserAdmin = params.administratorId;
+        user_camera.UserCollaborator = null;
+        user_camera.save();
+        console.log(`Cámara creada con exito`);
+    }
+});*/
+
+								if (collaborators.length > 0) {
+									collaborators.filter(function (collaborator) {
+										console.log(collaborator);
+										let user_camera = new UserCamera();
+										user_camera.cameraId = cameraStored._id;
+										user_camera.UserAdmin = params.administratorId;
+										user_camera.UserCollaborator = collaborator._id;
+										user_camera.save();
+									});
+								} else {
+									let user_camera = new UserCamera();
+									user_camera.cameraId = cameraStored._id;
+									user_camera.UserAdmin = params.administratorId;
+									user_camera.UserCollaborator = null;
+									user_camera.save();
+									console.log(`Cámara creada con exito`);
+								}
+							});
 					} else {
-						res.status(200).send({camara: camaraStored});
+						res.status(404).send({message: "El administrador no existe"});
 					}
-				}
-			});
-		}
+				});
+			}
+		});
 	} catch (error) {
 		console.error(error);
 	}

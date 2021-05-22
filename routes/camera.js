@@ -11,7 +11,7 @@ const md_auth_admin = require("../middleware/is_admin");
 var {check} = require("express-validator");
 
 api.post(
-	"/camera",
+	"/save-camera",
 	[md_auth.ensureAuth, md_auth_admin.isAdmin],
 	CameraController.saveCamera
 );
@@ -29,7 +29,7 @@ api.get(
 );
 
 api.get(
-	"/get-camera",
+	"/get-camera/:id",
 	[md_auth.ensureAuth, md_auth_admin.isAdmin],
 	CameraController.getCamera
 );
