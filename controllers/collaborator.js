@@ -76,3 +76,30 @@ exports.getCollaboratorsByAdministrator = async (req, res) => {
 		console.error(error);
 	}
 };
+
+exports.DeleteCollaborator = async (req, res) => {
+	try {
+		var collaboratorId = req.params.id;
+
+		await UserCamera.deleteOne({UserCollaborator: collaboratorId});
+
+		await User.findByIdAndRemove(
+			collaboratorId,
+			(err, notificationRemoved) => {
+				if (err) {
+					res.status(500).send({message: "Error al eliminar el colaborador"});
+				} else {
+					if (!notificationRemoved) {
+						res
+							.status(404)
+							.send({message: "El colaborador ya ha sido eliminado"});
+					} else {
+						res.status(200).send({notificationRemoved});
+					}
+				}
+			}
+		);
+	} catch (error) {
+		console.error(error);
+	}
+};

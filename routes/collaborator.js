@@ -21,4 +21,10 @@ api.get(
 	CollaboratorController.getCollaboratorsByAdministrator
 );
 
+api.delete(
+	"/delete-collaborator/:id",
+	[md_auth.ensureAuth, md_auth_admin.isAdmin],
+	CollaboratorController.DeleteCollaborator
+);
+
 module.exports = api;

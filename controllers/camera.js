@@ -55,39 +55,40 @@ exports.saveCamera = async (req, res) => {
 							.then((collaborators) => {
 								//REVISAR ESTO filter es null buscar otro for para js
 								/* if (userExists) {
-    user_camera.UserAdmin = params.administratorId;
-    user_camera.UserCollaborator = null;
-    user_camera.save();
-    console.log(`Cámara creada con exito`);
-}
+										user_camera.UserAdmin = params.administratorId;
+										user_camera.UserCollaborator = null;
+										user_camera.save();
+										console.log(`Cámara creada con exito`);
+									}
 
-collaboratorController
-.getCollaboratorsByAdministrator({
-    body: {UserAdmin: params.administratorId},
-})
-.then((collaborators) => {
-    if (collaborators.length > 0) {
-        collaborators.filter(function (collaborator) {
-            user_camera.UserAdmin = params.administratorId;
-            user_camera.UserCollaborator = collaborator._id;
-            user_camera.save();
-        });
-    } else {
-        user_camera.UserAdmin = params.administratorId;
-        user_camera.UserCollaborator = null;
-        user_camera.save();
-        console.log(`Cámara creada con exito`);
-    }
-});*/
+									collaboratorController
+									.getCollaboratorsByAdministrator({
+										body: {UserAdmin: params.administratorId},
+									})
+									.then((collaborators) => {
+										if (collaborators.length > 0) {
+											collaborators.filter(function (collaborator) {
+												user_camera.UserAdmin = params.administratorId;
+												user_camera.UserCollaborator = collaborator._id;
+												user_camera.save();
+											});
+										} else {
+											user_camera.UserAdmin = params.administratorId;
+											user_camera.UserCollaborator = null;
+											user_camera.save();
+											console.log(`Cámara creada con exito`);
+										}
+									});*/
 
 								if (collaborators.length > 0) {
 									collaborators.filter(function (collaborator) {
-										console.log(collaborator);
-										let user_camera = new UserCamera();
-										user_camera.cameraId = cameraStored._id;
-										user_camera.UserAdmin = params.administratorId;
-										user_camera.UserCollaborator = collaborator._id;
-										user_camera.save();
+										if (collaborator !== null){
+											let user_camera = new UserCamera();
+											user_camera.cameraId = cameraStored._id;
+											user_camera.UserAdmin = params.administratorId;
+											user_camera.UserCollaborator = collaborator._id;
+											user_camera.save();
+										}
 									});
 								} else {
 									let user_camera = new UserCamera();
@@ -132,7 +133,21 @@ exports.UpdateCamera = async (req, res) => {
 
 exports.DeleteCamera = async (req, res) => {
 	try {
+		var cameraId = req.params.id;
+
+		const collaborators = await UserCamera.find({cameraId: cameraId});
+
+		for (const collaborator of collaborators) {
+			if( collaborator.UserCollaborator !== null ){
+				await UserCamera.deleteOne({UserCollaborator: collaborator.UserCollaborator});
+			}
+		}
+
+		await Camera.deleteOne({_id: cameraId});
+
+		res.status(200).send({"message":"Camara eliminada exitosamente"});
+
 	} catch (error) {
-		console.error(error);
+		res.status(500).send({"message":"Error eliminando camara"});
 	}
 };

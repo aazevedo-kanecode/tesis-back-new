@@ -22,4 +22,9 @@ api.get(
 	UserCameraController.getCameraByCollaborator
 );
 
+api.get(
+	"/get-collaborator-by-camera/:id",
+	[md_auth.ensureAuth, md_auth_admin.isAdmin],
+	UserCameraController.getCollaboratorByCamera
+);
 module.exports = api;
