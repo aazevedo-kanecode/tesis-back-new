@@ -10,7 +10,16 @@ createRoles.createRoles();
 //const db = new JsonDB(new Config('myDatabase', true, false, '/'));
 
 const http = require("http").Server(app); //creamos un servidor http a partir de la libreria express
-const io = require("socket.io")(http); //para poder llamarlo desde nuestros html que vamos a crear luego
+ 
+const io = require('socket.io')(http, {
+    cors: {
+        origin: process.env.FRONT_ORIGIN || 'http://localhost:4200',
+        methods: ["GET", "POST"],
+        transports: ['websocket', 'polling'],
+        credentials: true
+    },
+    allowEIO3: true
+});
 
 //Push notifications
 const vapidKeys = {
