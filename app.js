@@ -10,7 +10,16 @@ createRoles.createRoles();
 //const db = new JsonDB(new Config('myDatabase', true, false, '/'));
 
 const http = require("http").Server(app); //creamos un servidor http a partir de la libreria express
-const io = require("socket.io")(http); //para poder llamarlo desde nuestros html que vamos a crear luego
+ 
+const io = require('socket.io')(http, {
+    cors: {
+        origin: process.env.FRONT_ORIGIN || 'http://localhost:4200',
+        methods: ["GET", "POST"],
+        transports: ['websocket', 'polling'],
+        credentials: true
+    },
+    allowEIO3: true
+});
 
 //Push notifications
 const vapidKeys = {
@@ -35,6 +44,8 @@ var image_routes = require("./routes/image");
 var notification_routes = require("./routes/notification");
 var confidenceLevels_routes = require("./routes/confidenceLevels");
 var face_routes = require("./routes/face");
+var google_drive = require("./routes/googleDrive");
+var user_camera = require("./routes/user_camera");
 
 // middlewares de body-parser
 
@@ -73,6 +84,8 @@ app.use("/api", image_routes);
 app.use("/api", notification_routes);
 app.use("/api", confidenceLevels_routes);
 app.use("/api", face_routes);
+app.use("/api", google_drive);
+app.use("/api", user_camera);
 
 io.on("connection", (socket) => {
 	socket.on("stream", (image) => {

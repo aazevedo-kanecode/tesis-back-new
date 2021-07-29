@@ -2,6 +2,7 @@
 
 var express = require("express");
 var UserController = require("../controllers/user");
+var CollaboratorController = require("../controllers/collaborator");
 
 // Router de express
 var api = express.Router();
@@ -32,5 +33,10 @@ api.post(
 api.get("/get-image-file/:imageFile", UserController.getImageFile);
 api.get("/auth-user", md_auth.ensureAuth, UserController.getUserToken);
 api.put("/forgot-password", UserController.forgotPassword);
+api.post(
+	"/save-collaborator",
+	[md_auth.ensureAuth, md_auth_admin.isAdmin],
+	CollaboratorController.createCollaborator
+);
 
 module.exports = api;

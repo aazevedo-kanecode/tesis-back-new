@@ -12,8 +12,9 @@ let Role = require("../models/role");
 // Servicio JWT
 var jwt = require("../services/jwt");
 const user = require("../models/user");
-const speakeasy = require("speakeasy");
 const twofactor = require("node-2fa");
+
+const CamaraController = require("../controllers/camera");
 
 const saveUser = async (req, res) => {
 	try {
@@ -41,44 +42,38 @@ const saveUser = async (req, res) => {
 			user.temp_secreto = temp_secret;
 
 			User.findOne({email: user.email.toLowerCase()}, (err, issetUser) => {
-				if (err) {
-					res.status(500).send({message: "error al comprobar el usuario"});
-				} else {
-					// comprobación de si nos llega un usuario
-					if (!issetUser) {
-						bcrypt.hash(params.password, null, null, function (error, hash) {
-							user.password = hash;
-							user.save((err, userStored) => {
-								if (err) {
-									res
-										.status(500)
-										.send({message: "error al guardar el usuario"});
-								} else {
-									if (!userStored) {
-										res
-											.status(404)
-											.send({message: "no se ha registrado el usuario"});
-									} else {
-										res.status(200).send({
-											token: jwt.createToken(userStored),
-											secret: userStored.temp_secreto,
-											id: userStored._id,
-										});
-									}
-								}
-							});
+				if (!issetUser) {
+					bcrypt.hash(params.password, null, null, function (error, hash) {
+						user.password = hash;
+						user.save((err, userStored) => {
+							if (!userStored) {
+								res
+									.status(404)
+									.send({message: "no se ha registrado el usuario"});
+							} else {
+								CamaraController.saveCamera({
+									body: {
+										administratorId: userStored._id,
+										name: "Camára por defecto",
+										flash: false,
+										power: false,
+										turn_screen: false,
+									},
+								});
+								res.status(200).send({
+									token: jwt.createToken(userStored),
+									secret: userStored.temp_secreto,
+									id: userStored._id,
+								});
+							}
 						});
-					} else {
-						res
-							.status(200)
-							.send({message: "Usuario ya existe y no puede registrarse"});
-					}
+					});
+				} else {
+					res
+						.status(200)
+						.send({message: "Usuario ya existe y no puede registrarse"});
 				}
 			});
-		} else {
-			res
-				.status(404)
-				.send({message: "Introduce los datos del usuario correctamente"});
 		}
 	} catch (error) {
 		console.log(error);

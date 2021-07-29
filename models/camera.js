@@ -19,17 +19,15 @@ var CameraSchema = Schema({
 		required: true,
 		trim: true,
 	},
-	resolution: {
-		type: String,
-		required: true,
-		trim: true,
-	},
 	turn_screen: {
 		type: Boolean,
 		required: true,
 		trim: true,
 	},
-	//Un usuario tiene muchas camaras y una camara puede ser vista por varios usuarios
+	user_camera: {
+		type: Schema.ObjectId,
+		ref: "UserCamera",
+	},
 });
 
 module.exports = mongoose.model("Camera", CameraSchema);

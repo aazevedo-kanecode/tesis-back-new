@@ -12,7 +12,19 @@ var {check} = require("express-validator");
 api.post(
 	"/create-collaborator",
 	[md_auth.ensureAuth, md_auth_admin.isAdmin],
-	CollaboratorController.createUser
+	CollaboratorController.createCollaborator
+);
+
+api.get(
+	"/get-collaborator-administrator/:id",
+	[md_auth.ensureAuth, md_auth_admin.isAdmin],
+	CollaboratorController.getCollaboratorsByAdministrator
+);
+
+api.delete(
+	"/delete-collaborator/:id",
+	[md_auth.ensureAuth, md_auth_admin.isAdmin],
+	CollaboratorController.DeleteCollaborator
 );
 
 module.exports = api;

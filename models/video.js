@@ -19,9 +19,8 @@ var VideoSchema = Schema({
 		required: true,
 		trim: true,
 	},
-	url: {
+	url_drive: {
 		type: String,
-		required: true,
 		trim: true,
 	},
 	size: {

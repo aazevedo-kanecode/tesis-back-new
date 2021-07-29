@@ -1,7 +1,7 @@
 "use strict";
 
 var express = require("express");
-var CameraController = require("../controllers/camera");
+var UserCameraController = require("../controllers/user_camera");
 
 // Router de express
 var api = express.Router();
@@ -10,34 +10,21 @@ const md_auth_admin = require("../middleware/is_admin");
 
 var {check} = require("express-validator");
 
-api.post(
-	"/save-camera",
+api.get(
+	"/get-camera-administrator/:id",
 	[md_auth.ensureAuth, md_auth_admin.isAdmin],
-	CameraController.saveCamera
-);
-
-api.put(
-	"/update-camera/:id",
-	[md_auth.ensureAuth, md_auth_admin.isAdmin],
-	CameraController.UpdateCamera
+	UserCameraController.getCameraByAdministrator
 );
 
 api.get(
-	"/get-cameras",
+	"/get-camera-collaborator/:id",
 	[md_auth.ensureAuth, md_auth_admin.isAdmin],
-	CameraController.getCameras
+	UserCameraController.getCameraByCollaborator
 );
 
 api.get(
-	"/get-camera/:id",
+	"/get-collaborator-by-camera/:id",
 	[md_auth.ensureAuth, md_auth_admin.isAdmin],
-	CameraController.getCamera
+	UserCameraController.getCollaboratorByCamera
 );
-
-api.delete(
-	"/camera/:id",
-	[md_auth.ensureAuth, md_auth_admin.isAdmin],
-	CameraController.DeleteCamera
-);
-
 module.exports = api;
