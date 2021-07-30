@@ -1,6 +1,6 @@
 "use strict";
 var createRoles = require("./libs/initialSetup");
-
+require('dotenv').config();
 var express = require("express");
 var bodyParser = require("body-parser");
 var webpush = require("web-push");
@@ -23,9 +23,8 @@ const io = require('socket.io')(http, {
 
 //Push notifications
 const vapidKeys = {
-	publicKey:
-		"BPWkPcyZruyIUOSj6XWbltqNRDP5sfC2hO31tRQPGs9AgAkxPcxRqbMnAQiuPbdSZDqcgWggIBJ0IOWzvf0i4hw",
-	privateKey: "GsOBamO1cRqmSyAofauqRqgi9EB1wZeLHaQeHM4zCrc",
+	publicKey: process.env.PUBLIC_KEY,
+	privateKey: process.env.PRIVATE_KEY,
 };
 
 webpush.setVapidDetails(
