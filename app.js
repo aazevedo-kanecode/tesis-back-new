@@ -21,6 +21,7 @@ const io = require('socket.io')(http, {
     allowEIO3: true
 });
 
+
 //Push notifications
 const vapidKeys = {
 	publicKey: process.env.PUBLIC_KEY,
