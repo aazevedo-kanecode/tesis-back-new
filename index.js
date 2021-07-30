@@ -7,7 +7,7 @@ var port = process.env.PORT || 8000;
 // Url de la base de datos a https://mlab.com/databases/zoo
 //var url = "mongodb://localhost:27017/camaraDB";
 
-var url = process.env.MONGOCONNECTION
+var url = process.env.MONGO_CONNECTION
 
 //var url =
 //("mongodb+srv://oeneika:febrero1996@ucabcluster.lfasz.mongodb.net/tesis_backend");
