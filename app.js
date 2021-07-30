@@ -5,8 +5,6 @@ var express = require("express");
 var bodyParser = require("body-parser");
 var webpush = require("web-push");
 
-const base64url = require('base64url');
-
 var app = express();
 createRoles.createRoles();
 //const db = new JsonDB(new Config('myDatabase', true, false, '/'));
@@ -23,19 +21,16 @@ const io = require('socket.io')(http, {
     allowEIO3: true
 });
 
-
 //Push notifications
 const vapidKeys = {
 	publicKey: process.env.PUBLIC_KEY,
 	privateKey: process.env.PRIVATE_KEY,
 };
-const encodePublicKey = base64url.fromBase64(vapidKeys.publicKey)
-const encodePrivateKey = base64url.fromBase64(vapidKeys.privateKey)
 
 webpush.setVapidDetails(
 	"mailto:example@yourdomain.org",
-	encodePublicKey,
-	encodePrivateKey
+	vapidKeys.publicKey,
+	vapidKeys.privateKey
 );
 
 // Cargar rutas
