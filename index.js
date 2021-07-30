@@ -9,11 +9,11 @@ var port = process.env.PORT || 8000;
 
 var url = process.env.MONGOCONNECTION
 
-
 //var url =
 //("mongodb+srv://oeneika:febrero1996@ucabcluster.lfasz.mongodb.net/tesis_backend");
 const connectionParams={
     useNewUrlParser: true,
+	useCreateIndex: true,
     useUnifiedTopology: true 
 }
 
