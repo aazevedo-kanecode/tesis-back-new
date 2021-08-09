@@ -112,7 +112,7 @@ io.on('connection', (socket) => {
 })
 
 var hostedServer = serverPeerjs.listen(process.env.PEERjS_PORT, () => {
-    console.log(`Peerjs server running on port: ${process.env.PEERjS_PORT}`)
+    console.log(`Peerjs server running on port: ${process.env.PEERJS_PORT}`)
 });
 
 
