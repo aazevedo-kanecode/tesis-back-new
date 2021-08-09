@@ -83,7 +83,7 @@ const saveUser = async (req, res) => {
 
 const verificationCode = async (req, res) => {
 	var params = req.body;
-
+	console.log("verificando el usuario")
 	try {
 		if (params.secret && params.token_secret) {
 			const verified = twofactor.verifyToken(

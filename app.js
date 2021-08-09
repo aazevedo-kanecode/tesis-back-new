@@ -8,9 +8,9 @@ var webpush = require("web-push");
 var app = express();
 createRoles.createRoles();
 //const db = new JsonDB(new Config('myDatabase', true, false, '/'));
-
+const { ExpressPeerServer } = require('peer');
 const http = require("http").Server(app); //creamos un servidor http a partir de la libreria express
- 
+const serverPeerjs = require("http").Server(app);
 const io = require('socket.io')(http, {
     cors: {
         origin: process.env.FRONT_ORIGIN || 'http://localhost:4200',
@@ -58,13 +58,13 @@ app.use(cors());
 
 app.use((req, res, next) => {
 	res.header("Access-Control-Allow-Origin", "*");
-	//res.header("Access-Control-Allow-Credentials", true);
-	/*res.header(
+	//res.header("Access-Control-Allow-Credentials", false);
+	res.header(
 		"Access-Control-Allow-Headers",
 		"Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method"
-	);*/
+	);
 	res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
-	//res.header("Allow", "GET, POST, OPTIONS, PUT, DELETE");
+	res.header("Allow", "GET, POST, OPTIONS, PUT, DELETE");
 	next();
 });
 
@@ -87,12 +87,39 @@ app.use("/api", face_routes);
 app.use("/api", google_drive);
 app.use("/api", user_camera);
 
-io.on("connection", (socket) => {
+/*io.on("connection", (socket) => {
 	socket.on("stream", (image) => {
 		console.log("usuario conectado");
 		socket.broadcast.emit("stream", image); //emitir el evento a todos los sockets conectados
 	});
+});*/
+
+io.on('connection', (socket) => {
+    const id_handshake = socket.id;
+    console.log("uniendose a la llamada")
+    console.log(`Nuevo dispositivo conectado: ${id_handshake}`);
+    socket.on('join', (data) => {
+        const roomName = data.roomName;
+        console.log("entrando al cuarto", roomName)
+        socket.join(roomName);
+        socket.broadcast.emit('new-user', data)
+
+        socket.on('disconnect', () => {
+            console.log("saliendo de la llamada: ", roomName)
+            socket.emit('bye-user', data)
+        })
+    })
+})
+
+var hostedServer = serverPeerjs.listen(process.env.PEERjS_PORT, () => {
+    console.log(`Peerjs server running on port: ${process.env.PEERjS_PORT}`)
 });
+
+
+const peerServer = ExpressPeerServer(hostedServer);
+
+app.use('/peerjs', peerServer);
+
 
 module.exports = app;
 module.exports = http;
