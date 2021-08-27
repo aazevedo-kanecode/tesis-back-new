@@ -4,16 +4,17 @@ require('dotenv').config();
 var express = require("express");
 var bodyParser = require("body-parser");
 var webpush = require("web-push");
-
+const fs = require("fs");
+var https = require('https');
 var app = express();
 createRoles.createRoles();
 //const db = new JsonDB(new Config('myDatabase', true, false, '/'));
 const { ExpressPeerServer } = require('peer');
 const http = require("http").Server(app); //creamos un servidor http a partir de la libreria express
-const serverPeerjs = require("http").Server(app);
+//const serverPeerjs = require("http").Server(app);
 const io = require('socket.io')(http, {
     cors: {
-        origin: process.env.FRONT_ORIGIN || 'http://localhost:4200',
+        origin: process.env.FRONT_END_ORIGIN || 'http://localhost:4200',
         methods: ["GET", "POST"],
         transports: ['websocket', 'polling'],
         credentials: true
@@ -111,10 +112,22 @@ io.on('connection', (socket) => {
     })
 })
 
-var hostedServer = serverPeerjs.listen(process.env.PEERjS_PORT, () => {
-    console.log(`Peerjs server running on port: ${process.env.PEERjS_PORT}`)
-});
+let serverPeerjs
+if(process.env.KEYS_PATH && process.env.CERT_PATH){
+    var options = {
+        key: fs.readFileSync(process.env.KEYS_PATH),
+        cert: fs.readFileSync(process.env.CERT_PATH)
+    };
 
+    serverPeerjs = https.createServer(options, app)
+}else{
+    serverPeerjs = require("http").Server(app);
+}
+
+/*var hostedServer = serverPeerjs.listen(process.env.PEERjS_PORT, () => {
+    console.log(`Peerjs server running on port: ${process.env.PEERjS_PORT}`)
+});*/
+var hostedServer = serverPeerjs.listen();
 
 const peerServer = ExpressPeerServer(hostedServer);
 
