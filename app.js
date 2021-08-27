@@ -4,14 +4,13 @@ require('dotenv').config();
 var express = require("express");
 var bodyParser = require("body-parser");
 var webpush = require("web-push");
-var https = require('https');
 
 var app = express();
 createRoles.createRoles();
 //const db = new JsonDB(new Config('myDatabase', true, false, '/'));
 const { ExpressPeerServer } = require('peer');
 const http = require("http").Server(app); //creamos un servidor http a partir de la libreria express
-
+const serverPeerjs = require("http").Server(app);
 const io = require('socket.io')(http, {
     cors: {
         origin: process.env.FRONT_ORIGIN || 'http://localhost:4200',
@@ -33,26 +32,6 @@ webpush.setVapidDetails(
 	vapidKeys.publicKey,
 	vapidKeys.privateKey
 );
-
-/*
-CERT_PATH="./../ssl/certs/1_b7_com_ba577_e6c0b_1630886399_ad5e87aafee886324fc2a01f9cf8b1ae.crt"
-KEYS_PATH="./../ssl/keys/ba577_e6c0b_6bda523571cb1d0aa7323d7a1f068fc2.key"
-*/
-
-let serverPeerjs
-if(process.env.KEYS_PATH && process.env.CERT_PATH){
-    var options = {
-        key: fs.readFileSync(process.env.KEYS_PATH),
-        cert: fs.readFileSync(process.env.CERT_PATH)
-    };
-
-    serverPeerjs = https.createServer(options, app)
-}else{
-    serverPeerjs = require("http").Server(app);
-}
-
-
-
 
 // Cargar rutas
 var user_routes = require("./routes/user");
@@ -108,6 +87,13 @@ app.use("/api", face_routes);
 app.use("/api", google_drive);
 app.use("/api", user_camera);
 
+/*io.on("connection", (socket) => {
+	socket.on("stream", (image) => {
+		console.log("usuario conectado");
+		socket.broadcast.emit("stream", image); //emitir el evento a todos los sockets conectados
+	});
+});*/
+
 io.on('connection', (socket) => {
     const id_handshake = socket.id;
     console.log("uniendose a la llamada")
@@ -119,14 +105,14 @@ io.on('connection', (socket) => {
         socket.broadcast.emit('new-user', data)
 
         socket.on('disconnect', () => {
-            console.log("saliendo de la llamada: ", roomName)
+            console.log("saliendo de la llamada: ", id_handshake)
             socket.emit('bye-user', data)
         })
     })
 })
 
 var hostedServer = serverPeerjs.listen(process.env.PEERjS_PORT, () => {
-    console.log(`Peerjs server running on port: ${process.env.PEERJS_PORT}`)
+    console.log(`Peerjs server running on port: ${process.env.PEERjS_PORT}`)
 });
 
 

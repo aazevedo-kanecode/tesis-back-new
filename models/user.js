@@ -31,6 +31,10 @@ var UserSchema = Schema({
 		type: Schema.ObjectId,
 		ref: "UserCamera",
 	},
+	user_room: [{
+		type: String,
+		required: false,
+	}]
 });
 
 module.exports = mongoose.model("User", UserSchema);
