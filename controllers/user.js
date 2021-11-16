@@ -36,7 +36,7 @@ const saveUser = async (req, res) => {
 			//const temp_secret = speakeasy.generateSecret();
 			const temp_secret = twofactor.generateSecret({
 				name: "Sistema de videovigilancia",
-				account: "Tesis por Alexander y Vladimir",
+				account: "Authenthicator",
 			});
 
 			user.temp_secreto = temp_secret;
@@ -82,7 +82,7 @@ const saveUser = async (req, res) => {
 
 const verificationCode = async (req, res) => {
 	var params = req.body;
-
+	console.log("verificando el usuario")
 	try {
 		if (params.secret && params.token_secret) {
 			const verified = twofactor.verifyToken(
@@ -94,6 +94,8 @@ const verificationCode = async (req, res) => {
 			} else {
 				res.status(404).send({message: "Usuario no verificado"});
 			}
+		}else{
+			res.status(404).send({message: "Usuario no verificado: campos incorrectos"});
 		}
 	} catch (error) {
 		console.error(error);

@@ -1,23 +1,32 @@
 "use strict";
 var createRoles = require("./libs/initialSetup");
-
+require('dotenv').config();
 var express = require("express");
 var bodyParser = require("body-parser");
 var webpush = require("web-push");
-
+const fs = require("fs");
+var https = require('https');
 var app = express();
 createRoles.createRoles();
 createRoles.createConfidenceLevel();
 //const db = new JsonDB(new Config('myDatabase', true, false, '/'));
-
+const { ExpressPeerServer } = require('peer');
 const http = require("http").Server(app); //creamos un servidor http a partir de la libreria express
-const io = require("socket.io")(http); //para poder llamarlo desde nuestros html que vamos a crear luego
+const serverPeerjs = require("http").Server(app);
+const io = require('socket.io')(http, {
+    cors: {
+        origin: process.env.FRONT_END_ORIGIN || 'http://localhost:4200',
+        methods: ["GET", "POST"],
+        transports: ['websocket', 'polling'],
+        credentials: true
+    },
+    allowEIO3: true
+});
 
 //Push notifications
 const vapidKeys = {
-	publicKey:
-		"BPWkPcyZruyIUOSj6XWbltqNRDP5sfC2hO31tRQPGs9AgAkxPcxRqbMnAQiuPbdSZDqcgWggIBJ0IOWzvf0i4hw",
-	privateKey: "GsOBamO1cRqmSyAofauqRqgi9EB1wZeLHaQeHM4zCrc",
+	publicKey: process.env.PUBLIC_KEY,
+	privateKey: process.env.PRIVATE_KEY,
 };
 
 webpush.setVapidDetails(
@@ -51,6 +60,7 @@ app.use(cors());
 
 app.use((req, res, next) => {
 	res.header("Access-Control-Allow-Origin", "*");
+	//res.header("Access-Control-Allow-Credentials", false);
 	res.header(
 		"Access-Control-Allow-Headers",
 		"Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method"
@@ -63,8 +73,8 @@ app.use((req, res, next) => {
 //streaming de video
 
 //ficheros estaticos
-app.use(require("./routes/streamingvideo.routes"));
-app.use(express.static(__dirname + "/public"));
+//app.use(require("./routes/streamingvideo.routes"));
+//app.use(express.static(__dirname + "/public"));
 
 // rutas base body-parser
 app.use("/api", user_routes);
@@ -79,12 +89,52 @@ app.use("/api", face_routes);
 app.use("/api", google_drive);
 app.use("/api", user_camera);
 
-io.on("connection", (socket) => {
+/*io.on("connection", (socket) => {
 	socket.on("stream", (image) => {
 		console.log("usuario conectado");
 		socket.broadcast.emit("stream", image); //emitir el evento a todos los sockets conectados
 	});
+});*/
+
+io.on('connection', (socket) => {
+    const id_handshake = socket.id;
+    console.log("uniendose a la llamada")
+    console.log(`Nuevo dispositivo conectado: ${id_handshake}`);
+    socket.on('join', (data) => {
+        const roomName = data.roomName;
+        console.log("entrando al cuarto", roomName)
+        socket.join(roomName);
+        socket.to(roomName).emit('new-user', data)
+
+        socket.on('disconnect', () => {
+            console.log("saliendo de la llamada: ", id_handshake)
+            socket.emit('bye-user', data)
+        })
+    })
+})
+
+/*let serverPeerjs
+if(process.env.KEYS_PATH && process.env.CERT_PATH){
+    var options = {
+        key: fs.readFileSync(process.env.KEYS_PATH),
+        cert: fs.readFileSync(process.env.CERT_PATH)
+    };
+
+    serverPeerjs = https.createServer(options, app)
+}else{
+    serverPeerjs = require("http").Server(app);
+}*/
+
+var hostedServer = serverPeerjs.listen(process.env.PEERjS_PORT, () => {
+    console.log(`Peerjs server running on port: ${process.env.PEERjS_PORT}`)
 });
+
+//var hostedServer = serverPeerjs.listen();
+
+const peerServer = ExpressPeerServer(hostedServer);
+
+app.use('/peerjs', peerServer);
+
 
 module.exports = app;
 module.exports = http;
