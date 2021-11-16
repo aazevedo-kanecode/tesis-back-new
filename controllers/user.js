@@ -1,7 +1,7 @@
 "use strict";
 
 // Modulos
-var bcrypt = require("bcrypt-nodejs");
+var bcrypt = require("bcryptjs");
 var fs = require("fs");
 var path = require("path");
 
@@ -43,30 +43,29 @@ const saveUser = async (req, res) => {
 
 			User.findOne({email: user.email.toLowerCase()}, (err, issetUser) => {
 				if (!issetUser) {
-					bcrypt.hash(params.password, null, null, function (error, hash) {
-						user.password = hash;
-						user.save((err, userStored) => {
-							if (!userStored) {
-								res
-									.status(404)
-									.send({message: "no se ha registrado el usuario"});
-							} else {
-								CamaraController.saveCamera({
-									body: {
-										administratorId: userStored._id,
-										name: "Camára por defecto",
-										flash: false,
-										power: false,
-										turn_screen: false,
-									},
-								});
-								res.status(200).send({
-									token: jwt.createToken(userStored),
-									secret: userStored.temp_secreto,
-									id: userStored._id,
-								});
-							}
-						});
+					const hash = bcrypt.hashSync(params.password, 10);
+					user.password = hash;
+					user.save((err, userStored) => {
+						if (!userStored) {
+							res
+								.status(404)
+								.send({message: "no se ha registrado el usuario"});
+						} else {
+							CamaraController.saveCamera({
+								body: {
+									administratorId: userStored._id,
+									name: "Camára por defecto",
+									flash: false,
+									power: false,
+									turn_screen: false,
+								},
+							});
+							res.status(200).send({
+								token: jwt.createToken(userStored),
+								secret: userStored.temp_secreto,
+								id: userStored._id,
+							});
+						}
 					});
 				} else {
 					res
@@ -107,8 +106,9 @@ const login = async (req, res) => {
 		var params = req.body;
 		var email = params.email;
 		var password = params.password;
-
-		User.findOne({email: email.toLowerCase()}, (err, user) => {
+		// .toLowerCase()
+		User.findOne({email: email}, (err, user) => {
+			
 			if (err) {
 				res.status(500).send({
 					message: "error al comprobar el usuario",
@@ -117,30 +117,50 @@ const login = async (req, res) => {
 				// comprobación de si nos llega un usuario
 				if (user) {
 					// si existe el usuario lo devuelve
-					bcrypt.compare(password, user.password, (err, check) => {
-						// Comprobación de contraseña
-						if (check) {
-							// contraseña correcta
-							// Comprobar y generar token JWT
-							if (params.getToken) {
-								// devolver el token
-								res.status(200).send({
-									token: jwt.createToken(user),
-								});
-							} else {
-								res.status(200).send({
-									token: jwt.createToken(user),
-									id: user.id,
-									secret: user.temp_secreto.secret,
-								});
-							}
+					console.log(password, user.password)
+					if (bcrypt.compare(password, user.password)){
+						if (params.getToken) {
+							// devolver el token
+							res.status(200).send({
+								token: jwt.createToken(user),
+							});
 						} else {
-							// contraseña incorrecta
-							res.status(404).send({
-								message: "Contraseña incorrecta, no ha podido loguearse",
+							res.status(200).send({
+								token: jwt.createToken(user),
+								id: user.id,
+								secret: user.temp_secreto.secret || undefined,
 							});
 						}
-					});
+					}else{
+						res.status(404).send({
+							message: "Contraseña incorrecta, no ha podido loguearse",
+						});
+					}
+					// bcrypt.compare(password, user.password, (err, check) => {
+					// 	// Comprobación de contraseña
+					// 	console.log(check)
+					// 	if (check) {
+					// 		// contraseña correcta
+					// 		// Comprobar y generar token JWT
+					// 		if (params.getToken) {
+					// 			// devolver el token
+					// 			res.status(200).send({
+					// 				token: jwt.createToken(user),
+					// 			});
+					// 		} else {
+					// 			res.status(200).send({
+					// 				token: jwt.createToken(user),
+					// 				id: user.id,
+					// 				secret: user.temp_secreto.secret,
+					// 			});
+					// 		}
+					// 	} else {
+					// 		// contraseña incorrecta
+					// 		res.status(404).send({
+					// 			message: "Contraseña incorrecta, no ha podido loguearse",
+					// 		});
+					// 	}
+					// });
 				} else {
 					// El usuario no existe
 					res

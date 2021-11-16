@@ -3,6 +3,8 @@ let User = require("../models/user");
 let Role = require("../models/role");
 let UserCamera = require("../models/user_camara");
 let userCameraController = require("../controllers/user_camera");
+var bcrypt = require('bcryptjs')
+const twofactor = require("node-2fa");
 
 exports.createCollaborator = async (req, res) => {
 	try {
@@ -20,41 +22,35 @@ exports.createCollaborator = async (req, res) => {
 
 			const role = await Role.findOne({name: "collaborator"});
 			user.roles = [role._id];
+			const userFind = await User.findOne({email: user.email.toLowerCase()});
+			const temp_secret = twofactor.generateSecret({
+				name: "Sistema de videovigilancia",
+				account: "Tesis por Alexander y Vladimir",
+			});
 
-			User.findOne(
-				{email: user.email.toLowerCase()},
-				(err, collaboratorExists) => {
-					if (!collaboratorExists) {
-						user.save((err, collaboratorStored) => {
-							//Creo el colaborador
-							userCameraController
-								.getCameraByAdministrator({
-									body: {UserAdmin: userIdAdmin},
-								})
-								.then((cameras) => {
-									cameras.filter(function (camarita) {
-										//Por cada camara encontrada creo una instancia
-										let user_camera = new UserCamera();
-										user_camera.cameraId = camarita;
-										user_camera.UserAdmin = userIdAdmin;
-										user_camera.UserCollaborator = collaboratorStored._id;
-										user_camera.save();
-									});
-								}); //Obtengo todas las camaras del administrad or
-
-							res.status(200).send({
-								message:
-									"Colaborador creado y asociado a las camaras del administrador",
-								collaboratorStored,
-							});
-						}); //Se crea el usuario
-					} else {
-						res.status(404).send({
-							message: "ERROR! El usuario ya es uno de sus colaboradores",
-						});
-					}
+			user.temp_secreto = temp_secret;
+			if (!userFind){
+				const hash = bcrypt.hashSync(user.password, 10);
+				user.password = hash;
+				user.save()
+				const userCamera = await this.getCollaboratorsByAdministrator({ body: { UserAdmin: userIdAdmin }})
+				for (const camarita of userCamera){
+					let user_camera = new UserCamera();
+					user_camera.cameraId = camarita;
+					user_camera.UserAdmin = userIdAdmin;
+					user_camera.UserCollaborator = user._id;
+					user_camera.save();
 				}
-			);
+				res.status(200).send({ 
+					message: "Colaborador creado y asociado a las camaras del administrador",
+					user,
+					password: params.password
+				});
+			}else {
+				res.status(404).send({
+					message: "ERROR! El usuario ya es uno de sus colaboradores",
+				});
+			}
 		}
 	} catch (error) {
 		console.error(error);

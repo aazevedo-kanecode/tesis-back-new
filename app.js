@@ -7,6 +7,7 @@ var webpush = require("web-push");
 
 var app = express();
 createRoles.createRoles();
+createRoles.createConfidenceLevel();
 //const db = new JsonDB(new Config('myDatabase', true, false, '/'));
 
 const http = require("http").Server(app); //creamos un servidor http a partir de la libreria express

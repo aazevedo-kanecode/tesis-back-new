@@ -25,6 +25,13 @@ exports.getCameraByCollaborator = async (req, res) => {
 		const cameras = await UserCamera.find({
 			UserCollaborator: collaboratorId,
 		});
+		let camerasObject = [];
+		for (const camera of cameras) {
+			const cam = await Camera.find({
+				_id: camera.cameraId
+			});
+			camerasObject.push(cam);
+		}
 		return res.json(cameras);
 	} catch (error) {
 		console.error(error);
